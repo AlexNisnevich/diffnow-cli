@@ -16,11 +16,9 @@ USAGE="Usage: `basename $0` [-hv] [-o output_file || -b path_to_browser] file1 f
 \n(If neither -o nor -b is specified, a URL will be returned.)
 "
 
-# default values for options
-OUTPUT_TO_FILE=0
-BROWSER=0
-
-# check for command-line switches
+# parse command-line switches
+OUTPUT_TO_FILE=
+BROWSER=
 while getopts hvob: OPT
 do
     case "$OPT" in
@@ -64,12 +62,12 @@ curl -b /tmp/cookies.txt -d "action=saveClips" --data-urlencode "clip1@$1" --dat
 # run the comparison
 curl -b /tmp/cookies.txt -d "action=compareClips&cmp_ica=false&cmp_ils=true&cmp_ico=false&cmp_ibl=true&cmp_iwa=true&cmp_iwl=false&cmp_iwt=false&cmp_iwc=false&cmp_hrz=false&col_iit=%23000000&col_iib=%23ffffff&col_iiu=false&col_iis=false&col_ait=%23800000&col_aib=%23c0c0c0&col_aiu=false&col_ais=false&col_dit=%230000ff&col_dib=%23e0e0e0&col_diu=false&col_dis=false&col_cit=%23402000&col_cib=%23f2f2c6&col_ciu=false&col_cis=false&col_ctt=%23ff0f87&col_ctb=%23e0e0e0&col_ctu=false&col_cts=false&col_itt=%23008000&col_itb=%23f0f0f0&col_itu=false&col_its=false&col_nit=%23800080&col_nib=%23a6caf0&col_niu=false&col_nis=false&col_oit=%23ff0000&col_oib=%23c0dcc0&col_oiu=false&col_ois=false&url1=&url2=" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
 
-if [ $OUTPUT_TO_FILE != 0 ]
+if [ ! -z "$OUTPUT_TO_FILE" ]
 then
     # save diff report to file
     curl -b /tmp/cookies.txt -d "action=saveResults" http://www.diffnow.com/EdpProcess.aspx > $OUTPUT_TO_FILE
 else
-    if [ $BROWSER != 0 ]
+    if [ ! -z "$BROWSER" ]
     then
         # save diff report to temp file and open in browser
         curl -b /tmp/cookies.txt -d "action=saveResults" http://www.diffnow.com/EdpProcess.aspx > tmp/diff_report.html 2>/dev/null
