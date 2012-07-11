@@ -70,8 +70,8 @@ else
     if [ ! -z "$BROWSER" ]
     then
         # save diff report to temp file and open in browser
-        curl -b /tmp/cookies.txt -d "action=saveResults" http://www.diffnow.com/EdpProcess.aspx > tmp/diff_report.html 2>/dev/null
-        $BROWSER tmp/diff_report.html
+        curl -b /tmp/cookies.txt -d "action=saveResults" http://www.diffnow.com/EdpProcess.aspx > /tmp/diff_report.html 2>/dev/null
+        $BROWSER /tmp/diff_report.html
     else
         # share diff report and output url
         report_id=$(curl -b /tmp/cookies.txt -d "action=storeResults&duration=week" http://www.diffnow.com/EdpProcess.aspx 2>/dev/null | cut -c1-5)
