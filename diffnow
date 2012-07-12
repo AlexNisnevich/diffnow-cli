@@ -53,11 +53,24 @@ then
     exit
 fi
 
+# try to figure out filetype
+case $(file -b $1 | sed "s/ .*//" | tr '[A-Z]' '[a-z]' | sed 's/[^a-z]//g') in
+    "c") FILETYPE=c;;
+    "html") FILETYPE=html;;
+    "java") FILETYPE=java;;
+    "perl") FILETYPE=perl;;
+    "php") FILETYPE=php;;
+    "python") FILETYPE=py;;
+    "ruby") FILETYPE=rb;; # ruby is not yet supported by DiffNow
+    "xml") FILETYPE=html;;
+    *) FILETYPE=;;
+esac
+
 # get ASP.NET cookie
 curl -c /tmp/cookies.txt www.diffnow.com > /dev/null 2>&1
 
 # save file contents as 'clips'
-curl -b /tmp/cookies.txt -d "action=saveClips" --data-urlencode "clip1@$1" --data-urlencode "clip2@$2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
+curl -b /tmp/cookies.txt -d "action=saveClips&clip_type=$FILETYPE" --data-urlencode "clip1@$1" --data-urlencode "clip2@$2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
 
 # run the comparison
 curl -b /tmp/cookies.txt -d "action=compareClips&cmp_ica=false&cmp_ils=true&cmp_ico=false&cmp_ibl=true&cmp_iwa=true&cmp_iwl=false&cmp_iwt=false&cmp_iwc=false&cmp_hrz=false&col_iit=%23000000&col_iib=%23ffffff&col_iiu=false&col_iis=false&col_ait=%23800000&col_aib=%23c0c0c0&col_aiu=false&col_ais=false&col_dit=%230000ff&col_dib=%23e0e0e0&col_diu=false&col_dis=false&col_cit=%23402000&col_cib=%23f2f2c6&col_ciu=false&col_cis=false&col_ctt=%23ff0f87&col_ctb=%23e0e0e0&col_ctu=false&col_cts=false&col_itt=%23008000&col_itb=%23f0f0f0&col_itu=false&col_its=false&col_nit=%23800080&col_nib=%23a6caf0&col_niu=false&col_nis=false&col_oit=%23ff0000&col_oib=%23c0dcc0&col_oiu=false&col_ois=false&url1=&url2=" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
