@@ -61,7 +61,7 @@ case $(file -b $1 | sed "s/ .*//" | tr '[A-Z]' '[a-z]' | sed 's/[^a-z]//g') in
     "perl") FILETYPE=perl;;
     "php") FILETYPE=php;;
     "python") FILETYPE=py;;
-    "ruby") FILETYPE=rb;; # ruby is not yet supported by DiffNow
+    "ruby") FILETYPE=rb;;
     "xml") FILETYPE=html;;
     *) FILETYPE=;;
 esac
