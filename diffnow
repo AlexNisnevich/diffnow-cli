@@ -1,26 +1,27 @@
 #!/bin/sh
 
-# diffnow-cli v1.1
+# diffnow-cli v1.2
 # by Alex Nisnevich
 #
 # Compares two files on www.diffnow.com and outputs the URL of their online diff report.
 # Optionally saves the HTML diff report to file or opens in browser instead.
 #
 
-USAGE="Usage: `basename $0` [-hv] [-o output_file || -b path_to_browser] file1 file2
+USAGE="Usage: `basename $0` [-uhv] [-o output_file || -b path_to_browser] file1 file2
 \nOptions:
 \n\t    -o : outputs HTML report to file
 \n\t    -b : opens HTML report in the specified browser
+\n\t    -u : compare URLs instead of files
 \n\t    -v : displays version
 \n\t    -h : returns this message
-\n(If neither -o nor -b is specified, a URL will be returned.)
+\n(If neither -o nor -b is specified, a URL to the diff report will be returned.)
 "
 
 # parse command-line switches
+MODE=files
 OUTPUT_TO_FILE=
 BROWSER=
-CLIPS=
-while getopts ob:hvc OPT
+while getopts ob:hvuc OPT
 do
     case "$OPT" in
         h) # help
@@ -37,8 +38,11 @@ do
         b) # browser
             BROWSER=$OPTARG
             ;;
+        u) # compare urls instead of files
+            MODE=urls
+            ;;
         c) # compare strings instead of files (mainly for testing)
-            CLIPS=1
+            MODE=clips
             ;;
         \?) # getopts issues an error message
             echo $USAGE >&2
@@ -82,21 +86,27 @@ esac
 # get ASP.NET cookie
 curl -c /tmp/cookies.txt www.diffnow.com > /dev/null 2>&1
 
-# save file contents as 'clips'
-if [ -z "$CLIPS" ]
+if [ "$MODE" = "urls" ]
 then
-    # first, HTML-encode characters that will break ( &><" )
-    sed 's/&/&amp;/g' $1 | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g' | sed 's/"/\&quot;/g' > /tmp/file1
-    sed 's/&/&amp;/g' $2 | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g' | sed 's/"/\&quot;/g' > /tmp/file2
-
-    curl -b /tmp/cookies.txt -d "action=saveClips&clip_type=$FILETYPE" --data-urlencode "clip1@/tmp/file1" --data-urlencode "clip2@/tmp/file2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
+    # run the comparison
+    curl -b /tmp/cookies.txt -d "action=compareUrls&cmp_ica=false&cmp_ils=true&cmp_ico=false&cmp_ibl=true&cmp_iwa=true&cmp_iwl=false&cmp_iwt=false&cmp_iwc=false&cmp_hrz=false&col_iit=%23000000&col_iib=%23ffffff&col_iiu=false&col_iis=false&col_ait=%23800000&col_aib=%23c0c0c0&col_aiu=false&col_ais=false&col_dit=%230000ff&col_dib=%23e0e0e0&col_diu=false&col_dis=false&col_cit=%23402000&col_cib=%23f2f2c6&col_ciu=false&col_cis=false&col_ctt=%23ff0f87&col_ctb=%23e0e0e0&col_ctu=false&col_cts=false&col_itt=%23008000&col_itb=%23f0f0f0&col_itu=false&col_its=false&col_nit=%23800080&col_nib=%23a6caf0&col_niu=false&col_nis=false&col_oit=%23ff0000&col_oib=%23c0dcc0&col_oiu=false&col_ois=false&url1=$1&url2=$2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
 else
-    # use strings instead of files (this is only really used for testing)
-    curl -b /tmp/cookies.txt -d "action=saveClips&clip_type=$FILETYPE" --data-urlencode "clip1=$1" --data-urlencode "clip2=$2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
-fi
+    # save file contents as 'clips'
+    if [ "$MODE" = "files" ]
+    then
+        # first, HTML-encode characters that will break ( &><" )
+        sed 's/&/&amp;/g' $1 | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g' | sed 's/"/\&quot;/g' > /tmp/file1
+        sed 's/&/&amp;/g' $2 | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g' | sed 's/"/\&quot;/g' > /tmp/file2
 
-# run the comparison
-curl -b /tmp/cookies.txt -d "action=compareClips&cmp_ica=false&cmp_ils=true&cmp_ico=false&cmp_ibl=true&cmp_iwa=true&cmp_iwl=false&cmp_iwt=false&cmp_iwc=false&cmp_hrz=false&col_iit=%23000000&col_iib=%23ffffff&col_iiu=false&col_iis=false&col_ait=%23800000&col_aib=%23c0c0c0&col_aiu=false&col_ais=false&col_dit=%230000ff&col_dib=%23e0e0e0&col_diu=false&col_dis=false&col_cit=%23402000&col_cib=%23f2f2c6&col_ciu=false&col_cis=false&col_ctt=%23ff0f87&col_ctb=%23e0e0e0&col_ctu=false&col_cts=false&col_itt=%23008000&col_itb=%23f0f0f0&col_itu=false&col_its=false&col_nit=%23800080&col_nib=%23a6caf0&col_niu=false&col_nis=false&col_oit=%23ff0000&col_oib=%23c0dcc0&col_oiu=false&col_ois=false&url1=&url2=" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
+        curl -b /tmp/cookies.txt -d "action=saveClips&clip_type=$FILETYPE" --data-urlencode "clip1@/tmp/file1" --data-urlencode "clip2@/tmp/file2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
+    else
+        # use strings instead of files (this is only really used for testing)
+        curl -b /tmp/cookies.txt -d "action=saveClips&clip_type=$FILETYPE" --data-urlencode "clip1=$1" --data-urlencode "clip2=$2" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
+    fi
+
+    # run the comparison
+    curl -b /tmp/cookies.txt -d "action=compareClips&cmp_ica=false&cmp_ils=true&cmp_ico=false&cmp_ibl=true&cmp_iwa=true&cmp_iwl=false&cmp_iwt=false&cmp_iwc=false&cmp_hrz=false&col_iit=%23000000&col_iib=%23ffffff&col_iiu=false&col_iis=false&col_ait=%23800000&col_aib=%23c0c0c0&col_aiu=false&col_ais=false&col_dit=%230000ff&col_dib=%23e0e0e0&col_diu=false&col_dis=false&col_cit=%23402000&col_cib=%23f2f2c6&col_ciu=false&col_cis=false&col_ctt=%23ff0f87&col_ctb=%23e0e0e0&col_ctu=false&col_cts=false&col_itt=%23008000&col_itb=%23f0f0f0&col_itu=false&col_its=false&col_nit=%23800080&col_nib=%23a6caf0&col_niu=false&col_nis=false&col_oit=%23ff0000&col_oib=%23c0dcc0&col_oiu=false&col_ois=false&url1=&url2=" http://www.diffnow.com/EdpProcess.aspx > /dev/null 2>&1
+fi
 
 if [ ! -z "$OUTPUT_TO_FILE" ]
 then
